@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sensor Dashboard</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.6.1/socket.io.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0; /* Remove margens externas */
+            height: 100vh; /* Ocupa a altura total da janela */
+            display: flex;    
+            justify-content: space-between; 
+            align-items: center; 
+            /* flex-flow: column; */ 
+            flex-direction: column; 
+            text-align: center; /* Centraliza o texto */
+            background-color: #f4f4f9; /* Cor de fundo opcional */
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        .sensor-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 10vh;
+        }
+
+        .sensor {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            width: 200px;
+            text-align: center;
+            background-color: #f9f9f9;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .sensor_img {
+            width: 40vw;
+            display: block; 
+            margin: 0 auto; 
+        }
+        
+
+
+        .sensor h2 {
+            margin: 0;
+            font-size: 1.5em;
+            color: #333;
+        }
+
+        .sensor p {
+            margin: 10px 0 0;
+            font-size: 1.2em;
+            color: #666;
+        }
+        .button {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 10px;
+            width: 200px;
+            margin-left: 10px;
+            margin-top: 20px;
+            text-align: center;
+            background-color: #eaf1ff;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+        }
+        .button:hover{
+            
+            background-color: #857cb6;
+        }
+    </style>
+</head>
+<body>
+    <h1>Dashboard de Sensores</h1>
+    
+    <div class="sensor_img" id="data_hora">
+        <img id="umidade_img" class="sensor_img" src="" alt="Imagem da Umidade" />
+    </div>
+    <div class="sensor-container">
+        <div class="sensor" id="data_hora">
+            <h2>Data e hora</h2>
+            <p id="data_horap">0</p>
+        </div>
+        <div class="sensor" id="luminosidade">
+            <h2>Luminosidade</h2>
+            <p id="luminosidadep">0</p>
+        </div>
+        <div class="sensor" id="umidade">
+            <h2>Umidade</h2>
+            <p id="umidadep">0</p>
+        </div>
+        <div class="sensor" id="temperatura">
+            <h2>Temperatura</h2>
+            <p id="temperaturap">0</p>
+        </div>
+        <div class="sensor" id="pressao">
+            <h2>Pressão</h2>
+            <p id="pressaop">0</p>
+        </div>
+        <div class="sensor" id="altitude">
+            <h2>Altitude</h2>
+            <p id="altitudep">0</p>
+        </div>
+        <div class="sensor" id="sensacao_termica">
+            <h2>Sensação Térmica</h2>
+            <p id="sensacao_termicap">0</p>
+        </div>
+    </div>
+    <div class="button" onclick="enviarAtivacao()" >
+        Mostrar led
+    </div>
+    <script>
+        const socket = io();
+        
+        socket.on('update_data', (data) => {
+            
+            document.querySelector('#data_horap').textContent = data.data_hora + ".";
+            document.querySelector('#luminosidadep').textContent = data.luminosidade + ".";
+            document.querySelector('#umidadep').textContent = data.umidade+ " %";
+            document.querySelector('#temperaturap').textContent = data.temperatura+ " °C";
+            document.querySelector('#pressaop').textContent = data.pressao+ " atm";
+            document.querySelector('#altitudep').textContent = data.altitude+ " m";
+            document.querySelector('#sensacao_termicap').textContent = data.sensacao_termica+ " °C";
+            const umidadeImg = document.querySelector('#umidade_img');
+            if (data.umidade > 65) {
+                umidadeImg.src = '/static/imagens/chuva.png'; 
+                umidadeImg.alt = 'Alta Umidade - Chuva';
+            } else if (data.umidade > 60) {
+                umidadeImg.src = '/static/imagens/nublado.png'; 
+                umidadeImg.alt = 'Umidade Moderada - Nublado';
+            } else {
+                umidadeImg.src = '/static/imagens/sol.png'; 
+                umidadeImg.alt = 'Baixa Umidade - Sol';
+            }
+        });
+        function enviarAtivacao() {
+            fetch('/mqtt-ativacao', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ativacao: 1 })
+            }).then(response => {
+                if (response.ok) {
+                    console.log('Mensagem enviada ao broker com sucesso');
+                } else {
+                    console.error('Falha ao enviar mensagem ao broker');
+                }
+            });
+        } 
+    </script>
+</body>
+</html>
